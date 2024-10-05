@@ -5,7 +5,7 @@
   "author": "Nitin Kumar Pal",
   "keywords": ["bun", "bun.js", "tubetweet", "tubetweet.js", "tubetweet-api", "tubetweet-api.js"],
   "scripts": {
-    "dev": "bun --hot --watch index.ts"
+    "dev": "bun --hot --watch ./src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
