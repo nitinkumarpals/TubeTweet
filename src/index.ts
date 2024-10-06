@@ -1,15 +1,16 @@
-import express,{Response, Request} from "express";
-import connectDb from "./db";
-const app = express();
+import connectDb from "./db/db";
+import { app } from "./app";
 const port = process.env.PORT || 3000;
-app.use(express.json());
-connectDb();
-app.use("/", (req: Request, res: Response) => {
-  res.status(200).json({
-    message: "hello bun",
+connectDb()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`App is listening at port : ${port}`);
+    });
+  })
+  .catch((error) => {
+    console.log("MongoDb connection failed !!!", error);
   });
+app.on("error", (error) => {
+  console.error("Error occurred:", error);
+  throw error;
 });
-
-app.listen(port,()=>{
-    console.log(`Listening on port ${port}...`)
-})
