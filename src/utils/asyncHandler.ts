@@ -1,6 +1,6 @@
 // prototype-> const asyncHander = () => { () => {} };
 import { Request, Response, NextFunction } from "express";
-const asyncHandler =
+export const asyncHandler =
   (fn: (req: Request, res: Response, next: NextFunction) => any) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {

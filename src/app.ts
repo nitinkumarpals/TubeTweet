@@ -14,4 +14,11 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 //{ extended: true } we can give object inside object
 app.use(express.static("public"));
 app.use(cookieParser());
+
+//routes import
+import userRouter from "./routes/user.routes.ts";
+
+//routes declaration
+app.use("/api/v1/users", userRouter);
+
 export { app };
