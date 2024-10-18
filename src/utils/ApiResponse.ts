@@ -2,8 +2,8 @@ class ApiResponse {
     public success: boolean;
     constructor(
         public statusCode: number,
+        public data: any,
         public message: string = "Success",
-        public data: any
     ) {
         this.statusCode = statusCode;
         this.message = message;

@@ -25,8 +25,7 @@ export const registerUser = asyncHandler(
             throw new ApiError(400, error);
         }
 
-        const { email, userName, fullName, avatar, coverImage, password } =
-            parsedBody.data;
+        const { email, userName, fullName, password } = parsedBody.data;
 
         const existedUser = await User.findOne({
             $or: [{ email }, { userName }]
@@ -43,8 +42,8 @@ export const registerUser = asyncHandler(
         const coverImageLocalPath = files?.coverImage?.[0].path;
 
         if (!avatarLocalPath) {
-            throw new ApiError(400, "Avatar is required");
-        }
+            throw new ApiError(400, "Avatar file is required");
+        }      
 
         const avatarUrl = await uploadOnCloudinary(avatarLocalPath);
         const coverImageUrl = await uploadOnCloudinary(coverImageLocalPath);
@@ -52,7 +51,6 @@ export const registerUser = asyncHandler(
         if (!avatarUrl) {
             throw new ApiError(400, "Avatar upload failed");
         }
-
         try {
             const user = await User.create({
                 fullName,
@@ -62,16 +60,21 @@ export const registerUser = asyncHandler(
                 coverImage: coverImageUrl?.url || "",
                 password
             });
-
-            const {
-                password: passwordString,
-                refreshToken,
-                ...userData
-            } = user;
-
-            res.status(201).json(
-                new ApiResponse(201, "User created successfully", userData)
-            );
+            console.log("object created successfully");
+            const filteredUser = {
+                ...user.toObject(),
+                password: undefined,
+                refreshToken: undefined
+            };
+            return res
+                .status(201)
+                .json(
+                    new ApiResponse(
+                        201,
+                        filteredUser,
+                        "User created successfully"
+                    )
+                );
         } catch (error: Error | any) {
             throw new ApiError(500, "Failed to create user", error);
         }
