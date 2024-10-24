@@ -1,5 +1,6 @@
 import { userSchema } from "../schemas/user.schema";
 import { signInSchema } from "../schemas/signIn.schema";
+import { changePasswordSchema } from "../schemas/changePassword.schema";
 import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
@@ -7,6 +8,7 @@ import { User } from "../models/user.model";
 import { uploadOnCloudinary } from "../utils/fileUpload";
 import { ApiResponse } from "../utils/ApiResponse";
 import jwt from "jsonwebtoken";
+import { updateAccountDetailSchema } from "../schemas/updateAccountDetail.schema";
 const generateAccessAndRefreshTokens = async (
     userId: string
 ): Promise<{
@@ -206,9 +208,8 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
         httpOnly: true,
         secure: true
     };
-    const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(
-        user?._id as string
-    );
+    const { accessToken, refreshToken: newRefreshToken } =
+        await generateAccessAndRefreshTokens(user?._id as string);
 
     return res
         .status(200)
@@ -222,4 +223,80 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
             )
         );
 });
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+
+const changeCurrentPassword = asyncHandler(
+    async (req: Request, res: Response) => {
+        const body = req.body;
+        const parsedBody = changePasswordSchema.safeParse(body);
+        if (!parsedBody.success) {
+            const error = parsedBody.error.errors
+                .map((err) => `${err.path[0]} ${err.message}`)
+                .join(", ");
+            throw new ApiError(400, error);
+        }
+        const { currentPassword, newPassword, confirmNewPassword } =
+            parsedBody.data;
+        const user = await User.findById(req.user?._id);
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+        const isPasswordCorrect = await user.isPasswordCorrect(currentPassword);
+        if (!isPasswordCorrect) {
+            throw new ApiError(401, "Incorrect current password");
+        }
+        if (newPassword !== confirmNewPassword) {
+            throw new ApiError(400, "Passwords do not match");
+        }
+        user.password = newPassword;
+        await user.save({ validateBeforeSave: false });
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "Password changed successfully"));
+    }
+);
+
+const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
+    return res
+        .status(200)
+        .json(new ApiResponse(200, req.user, "User retrieved successfully"));
+});
+
+const updateAccountDetail = asyncHandler(
+    async (req: Request, res: Response) => {
+        const body = req.body;
+        const parsedBody = updateAccountDetailSchema.safeParse(body);
+        if (!parsedBody.success) {
+            const error = parsedBody.error.errors
+                .map((err) => `${err.path[0]} ${err.message}`)
+                .join(", ");
+            throw new ApiError(400, error);
+        }
+        const { fullName, email } = parsedBody.data;
+        const user = await User.findByIdAndUpdate(
+            req.user?._id,
+            {
+                $set: {
+                    fullName,
+                    email
+                }
+            },
+            {
+                new: true
+            }
+        ).select("-password -refreshToken");
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(200, { user }, "Account details updated successfully")
+            );
+    }
+);
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetail
+};

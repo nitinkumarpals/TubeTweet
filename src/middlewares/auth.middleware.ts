@@ -9,20 +9,24 @@ export const verifyJwt = asyncHandler(
             const token =
                 req.cookies?.accessToken ||
                 req.header("Authorization")?.split(" ")[1];
+
             if (!token) {
                 throw new ApiError(401, "Unauthorized");
             }
+
             const decodedToken = (await jwt.verify(
                 token,
                 process.env.ACCESS_TOKEN_SECRET as string
             )) as JwtPayload;
-            // const user = await User.findById(decodedToken?._id).select(
-            //     "-password -refreshToken"
-            // );
-            // if (!user) {
-            //     throw new ApiError(401, "Invalid Access Token");
-            // }
-            req.user = decodedToken;
+
+            const user = await User.findById(decodedToken?._id).select(
+                "-password -refreshToken"
+            );
+            if (!user) {
+                throw new ApiError(401, "Invalid Access Token");
+            }
+            req.user = user;
+            //req.user = decodedToken;
             next();
 
         } catch (error) {
