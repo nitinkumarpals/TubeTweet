@@ -5,7 +5,7 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
 import { User } from "../models/user.model";
-import { uploadOnCloudinary } from "../utils/fileUpload";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/fileUpload";
 import { ApiResponse } from "../utils/ApiResponse";
 import jwt from "jsonwebtoken";
 import { updateAccountDetailSchema } from "../schemas/updateAccountDetail.schema";
@@ -39,15 +39,14 @@ const generateAccessAndRefreshTokens = async (
     }
 };
 
-// get the user detail from body
-// validation - not empty and other zod validation
-// check if user is already registered: username, email
-// check for images, check for avatar
-// upload the images on cloudinary, avatar
-// create the user object - create entry in db
-// remove the password and avatar from the response
-
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
+    // get the user detail from body
+    // validation - not empty and other zod validation
+    // check if user is already registered: username, email
+    // check for images, check for avatar
+    // upload the images on cloudinary, avatar
+    // create the user object - create entry in db
+    // remove the password and avatar from the response
     const body = req.body;
     const parsedBody = userSchema.safeParse(body);
 
@@ -107,14 +106,13 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
         .json(new ApiResponse(201, filteredUser, "User created successfully"));
 });
 
-//req body  -> data
-//data validation using zod
-//check if user exists
-//check if password is correct
-//create access token and refresh token
-//send cookies
-
 const loginUser = asyncHandler(async (req: Request, res: Response) => {
+    //req body  -> data
+    //data validation using zod
+    //check if user exists
+    //check if password is correct
+    //create access token and refresh token
+    //send cookies
     const body = req.body;
     const parsedBody = signInSchema.safeParse(body);
     if (!parsedBody.success) {
@@ -305,6 +303,7 @@ const updateUserAvatar = asyncHandler(async (req: Request, res: Response) => {
     if (!avatar?.url) {
         throw new ApiError(500, "Failed to upload avatar on cloudinary");
     }
+    const publicId = req.user?.avatar.split("/").pop().split(".")[0];
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -314,6 +313,9 @@ const updateUserAvatar = asyncHandler(async (req: Request, res: Response) => {
         },
         { new: true }
     ).select("-password -refreshToken");
+    if (publicId) {
+        await deleteFromCloudinary(publicId);
+    }
     return res
         .status(200)
         .json(
@@ -334,6 +336,7 @@ const updateCoverImage = asyncHandler(async (req: Request, res: Response) => {
     if (!coverImage?.url) {
         throw new ApiError(500, "Failed to upload cover image on cloudinary");
     }
+    const publicId = req.user?.coverImage.split("/").pop().split(".")[0];
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -343,6 +346,9 @@ const updateCoverImage = asyncHandler(async (req: Request, res: Response) => {
         },
         { new: true }
     ).select("-password -refreshToken");
+    if (publicId) {
+        await deleteFromCloudinary(publicId);
+    }
     return res
         .status(200)
         .json(
@@ -354,8 +360,76 @@ const updateCoverImage = asyncHandler(async (req: Request, res: Response) => {
         );
 });
 
+const getUserChannelProfile = asyncHandler(
+    async (req: Request, res: Response) => {
+        const { userName } = req.params;
+        if (!userName) {
+            throw new ApiError(400, "User name is missing");
+        }
+
+        const channel = await User.aggregate([
+            {
+                $match: {
+                    userName: userName?.toLowerCase()
+                }
+            },
+            {
+                $lookup: {
+                    from: "subscriptions", // because everything in model is lowercase and become plural
+                    localField: "_id",
+                    foreignField: "channel",
+                    as: "subscribers"
+                }
+            },
+            {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "subscriber",
+                    as: "subscribedTo"
+                }
+            },
+            {
+                $addFields: {
+                    subscribersCount: { $size: "$subscribers" },
+                    subscribedToCount: { $size: "$subscribedTo" },
+                    isSubscribed: {
+                        // i have to check that in your subscribers object i am subscribed or not
+                        $cond: {
+                            if: {
+                                $in: [req.user?._id, "$subscribers.subscriber"]
+                            },
+                            then: true,
+                            else: false
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    fullName: 1,
+                    userName: 1,
+                    subscribersCount: 1,
+                    subscribedToCount: 1,
+                    isSubscribed: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                    email: 1
+                }
+            }
+        ]);
+
+        if (!channel?.length) {
+            throw new ApiError(404, "Channel not found");
+        }
+        return res
+            .status(200)
+            .json(new ApiResponse(200, channel[0], "Channel found successfully"));
+    }
+);
+
 export {
-    registerUser, 
+    registerUser,
     loginUser,
     logoutUser,
     refreshAccessToken,

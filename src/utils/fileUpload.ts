@@ -28,5 +28,21 @@ const uploadOnCloudinary = async (
         console.log("UploadOnCloudinary function has completed");
     }
 };
-
-export { uploadOnCloudinary };
+const deleteFromCloudinary = async (publicId: string) => {
+    try {
+        if (!publicId) return;
+        const response = await cloudinary.uploader.destroy(publicId);
+        if (response.result === "ok") {
+            console.log(`Deleted image with public ID: ${publicId}`);
+        }
+        else{
+            console.error(`Failed to delete image with public ID: ${publicId}`);
+        }
+    } catch (error) {
+        console.error(
+            `Failed to delete image with public ID: ${publicId}`,
+            error
+        );
+    }
+};
+export { uploadOnCloudinary, deleteFromCloudinary };
