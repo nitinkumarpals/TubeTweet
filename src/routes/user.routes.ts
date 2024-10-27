@@ -11,10 +11,10 @@ import {
     updateAccountDetail,
     updateCoverImage,
     updateUserAvatar
-} from "../controllers/user.controller.ts";
+} from "../controllers/user.controller.ts"; 
 import { upload } from "../middlewares/multer.middleware.ts";
 import { verifyJwt } from "../middlewares/auth.middleware.ts";
-const router = Router();
+const router:Router = Router();
 
 router.route("/register").post(
     upload.fields([
