@@ -1,5 +1,5 @@
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
-import { unlinkSync } from "node:fs";
+import { promises as fs } from "fs";
 
 // Configuration
 cloudinary.config({
@@ -18,10 +18,10 @@ const uploadOnCloudinary = async (
             resource_type: "auto"
         });
         console.log("File is uploaded on cloudinary", response.url);
-        unlinkSync(localFilePath);
+        await fs.unlink(localFilePath);
         return response;
     } catch (error) {
-        unlinkSync(localFilePath); //remove the locally saved temporary file as the upload failed
+        // unlinkSync(localFilePath); //remove the locally saved temporary file as the upload failed
         console.error(error);
         return null;
     } finally {
@@ -34,8 +34,7 @@ const deleteFromCloudinary = async (publicId: string) => {
         const response = await cloudinary.uploader.destroy(publicId);
         if (response.result === "ok") {
             console.log(`Deleted image with public ID: ${publicId}`);
-        }
-        else{
+        } else {
             console.error(`Failed to delete image with public ID: ${publicId}`);
         }
     } catch (error) {

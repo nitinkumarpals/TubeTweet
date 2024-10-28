@@ -1,10 +1,9 @@
-import mongoose, { isValidObjectId } from "mongoose";
+import mongoose from "mongoose";
 import { Request, Response } from "express";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Subscription } from "../models/subscription.model";
-import { User } from "../models/user.model";
 import { idSchema } from "../schemas/id.schema";
 
 const toggleSubscription = asyncHandler(async (req: Request, res: Response) => {

@@ -92,7 +92,6 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
         coverImage: coverImageUrl?.url || "",
         password
     });
-    console.log("object created successfully");
     const filteredUser = {
         ...user.toObject(),
         password: undefined,

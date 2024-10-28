@@ -17,6 +17,6 @@ app.on("error", (error) => {
     throw error;
 });
 
-app.use("/api", (req: Request, res: Response) => {
-    res.send("Hello from express");
+app.use((req: Request, res: Response) => {
+    res.status(404).send("Not found");
 });
