@@ -19,9 +19,11 @@ app.use(cookieParser());
 import userRouter from "./routes/user.routes.ts";
 import tweetRouter from "./routes/tweet.routes.ts";
 import healthCheckRouter from "./routes/healthCheck.routes.ts";
+import subscriptionRouter from "./routes/subscription.routes.ts";
 //routes declaration
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/tweets", tweetRouter);
 app.use("/api/v1/healthCheck", healthCheckRouter);
+app.use("/api/v1/subscriptions", subscriptionRouter);
 
 export { app };
