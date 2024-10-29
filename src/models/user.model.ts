@@ -6,8 +6,14 @@ export interface IUser extends Document {
     email: string;
     password: string;
     fullName: string;
-    avatar: string;
-    coverImage?: string;
+    avatar: {
+        url: string;
+        public_id: string;
+    };
+    coverImage?: {
+        url: string;
+        public_id: string;
+    };
     watchHistory: mongoose.Types.ObjectId[];
     refreshToken?: string;
     isPasswordCorrect(password: string): Promise<boolean>;
@@ -42,11 +48,17 @@ const userSchema = new Schema<IUser>(
             index: true
         },
         avatar: {
-            type: String, //cloudnary url
+            type: {
+                url: String,
+                public_id: String
+            }, //cloudnary url
             required: true
         },
         coverImage: {
-            type: String //cloudnary url
+            type: {
+                url: String,
+                public_id: String
+            } //cloudnary url
         },
         watchHistory: [
             {

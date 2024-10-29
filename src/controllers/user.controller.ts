@@ -88,8 +88,16 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
         fullName,
         userName: userName.toLowerCase(),
         email,
-        avatar: avatarUrl.url,
-        coverImage: coverImageUrl?.url || "",
+        avatar: {
+            url: avatarUrl.secure_url,
+            public_id: avatarUrl.public_id
+        },
+        coverImage: coverImageUrl
+            ? {
+                  url: coverImageUrl.secure_url,
+                  public_id: coverImageUrl.public_id
+              }
+            : undefined,
         password
     });
     const filteredUser = {
@@ -162,7 +170,7 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const logoutUser = asyncHandler(async (req: Request, res: Response) => {
-   const user = await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user._id,
         {
             $unset: { refreshToken: 1 }
@@ -302,18 +310,21 @@ const updateUserAvatar = asyncHandler(async (req: Request, res: Response) => {
     if (!avatar?.url) {
         throw new ApiError(500, "Failed to upload avatar on cloudinary");
     }
-    const publicId = req.user?.avatar.split("/").pop().split(".")[0];
+    const publicId = req.user?.avatar.public_id;
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                avatar: avatar.url
+                avatar: {
+                    avatar: avatar?.url,
+                    public_id: avatar?.public_id
+                }
             }
         },
         { new: true }
     ).select("-password -refreshToken");
     if (publicId) {
-        await deleteFromCloudinary(publicId);
+        await deleteFromCloudinary(publicId, "image");
     }
     return res
         .status(200)
@@ -335,18 +346,21 @@ const updateCoverImage = asyncHandler(async (req: Request, res: Response) => {
     if (!coverImage?.url) {
         throw new ApiError(500, "Failed to upload cover image on cloudinary");
     }
-    const publicId = req.user?.coverImage.split("/").pop().split(".")[0];
+    const publicId = req.user?.coverImage?.public_id;
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                coverImage: coverImage.url
+                coverImage: {
+                    coverImage: coverImage?.url,
+                    public_id: coverImage?.public_id
+                }
             }
         },
         { new: true }
     ).select("-password -refreshToken");
     if (publicId) {
-        await deleteFromCloudinary(publicId);
+        await deleteFromCloudinary(publicId, "image");
     }
     return res
         .status(200)
