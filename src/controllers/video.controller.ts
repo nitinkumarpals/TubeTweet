@@ -37,6 +37,7 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
     }
 
     pipeline.push({ $match: { isPublished: true } });
+
     //sortBy can be views, createdAt, duration
     //sortType can be ascending(-1) or descending(1)
     if (sortBy && sortType) {
@@ -59,7 +60,7 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
                 pipeline: [
                     {
                         $project: {
-                            username: 1,
+                            userName: 1,
                             "avatar.url": 1
                         }
                     }
@@ -70,17 +71,40 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
             $unwind: "$ownerDetails"
         }
     );
+    pipeline.push({
+        $project: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            videoFile: {
+                url: 1,
+                _id: 1
+            },
+            thumbnail: {
+                url: 1,
+                _id: 1
+            },
+            duration: 1,
+            views: 1,
+            isPublished: 1,
+            ownerDetails: 1,
+            createdAt: 1
+        }
+    });
+    // Calculate skip value for pagination
+    const skip =
+        (parseInt(page as string, 10) - 1) * parseInt(limit as string, 10);
+    pipeline.push({ $skip: skip }, { $limit: parseInt(limit as string, 10) });
+    const video = await Video.aggregate(pipeline);
+    // const options = {
+    //     page: parseInt(page as string, 10),
+    //     limit: parseInt(limit as string, 10)
+    // };
 
-    const videoAggregate = Video.aggregate(pipeline);
-    const options = {
-        page: parseInt(page as string, 10),
-        limit: parseInt(limit as string, 10)
-    };
-
-    const video = await Video.aggregatePaginate(videoAggregate, options);
+    // const video = await Video.aggregatePaginate(videoAggregate, options);
     return res
         .status(200)
-        .json(new ApiResponse(200, video, "Videos fetched successfully"));
+        .json(new ApiResponse(200, {video}, "Videos fetched successfully"));
 });
 
 const publishAVideo = asyncHandler(async (req: Request, res: Response) => {
