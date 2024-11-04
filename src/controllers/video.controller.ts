@@ -1,6 +1,5 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Video } from "../models/video.model";
-import { User } from "../models/user.model";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -40,13 +39,24 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
 
     //sortBy can be views, createdAt, duration
     //sortType can be ascending(-1) or descending(1)
-    if (sortBy && sortType) {
+    if (sortType && sortType !== "asc" && sortType !== "desc") {
+        throw new ApiError(
+            400,
+            `Invalid sort type. Must be either 'asc' or 'desc', but received '${sortType}'`
+        );
+    }
+
+    if (sortBy && (sortType === "asc" || sortType === "desc")) {
         pipeline.push({
             $sort: {
                 [sortBy.toString()]: sortType === "asc" ? 1 : -1
             } as { [key: string]: 1 | -1 }
         });
-    } else {
+    }
+    else if(sortType){
+        pipeline.push({ $sort: { createdAt: sortType === "asc" ? 1 : -1 } });
+    }
+    else {
         pipeline.push({ $sort: { createdAt: -1 } });
     }
 
@@ -104,7 +114,7 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
     // const video = await Video.aggregatePaginate(videoAggregate, options);
     return res
         .status(200)
-        .json(new ApiResponse(200, {video}, "Videos fetched successfully"));
+        .json(new ApiResponse(200, { video }, "Videos fetched successfully"));
 });
 
 const publishAVideo = asyncHandler(async (req: Request, res: Response) => {
