@@ -22,6 +22,7 @@ import healthCheckRouter from "./routes/healthCheck.routes.ts";
 import subscriptionRouter from "./routes/subscription.routes.ts";
 import videosRouter from "./routes/video.routes.ts";
 import playlistRouter from "./routes/playlist.routes.ts";
+import likeRouter from "./routes/like.routes.ts";
 //routes declaration
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/tweets", tweetRouter);
@@ -29,5 +30,6 @@ app.use("/api/v1/healthCheck", healthCheckRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/videos", videosRouter);
 app.use("/api/v1/playlists", playlistRouter);
+app.use("/api/v1/likes", likeRouter);
 
 export { app };
