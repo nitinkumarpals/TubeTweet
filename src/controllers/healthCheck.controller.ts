@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
-import { Request, Response, text } from "express";
+import { Request, Response } from "express";
 const healthCheck = asyncHandler(async (req: Request, res: Response) => {
     const healthCheck = {
         uptime: process.uptime(),

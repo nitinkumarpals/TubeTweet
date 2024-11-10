@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import { ApiResponse } from "../utils/ApiResponse";
 import { Video } from "../models/video.model";
 import { Subscription } from "../models/subscription.model";
-import { Like } from "../models/like.model";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Request, Response } from "express";
 
