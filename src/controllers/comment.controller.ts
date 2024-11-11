@@ -11,14 +11,9 @@ const addComment = asyncHandler(async (req: Request, res: Response) => {
     if (!isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid VideoId");
     }
-    const body = commentSchema.safeParse(req.body);
-    if (!body.success) {
-        const error = body.error.errors
-            .map((err) => `${err.path[0]} ${err.message}`)
-            .join(", ");
-        throw new ApiError(400, error);
-    }
-    const { content } = body.data;
+    
+    const { content } = req.body;
+    
     const video = await Video.findById(videoId);
     if (!video) {
         throw new ApiError(404, "video not found");

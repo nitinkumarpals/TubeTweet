@@ -12,7 +12,7 @@ const toggleVideoLike = asyncHandler(async (req: Request, res: Response) => {
     }
     const likedAlready = await Like.findOne({
         video: videoId,
-        owner: req.user?._id
+        likedBy: req.user?._id
     });
     if (likedAlready) {
         await Like.findByIdAndDelete(likedAlready._id);
@@ -22,7 +22,7 @@ const toggleVideoLike = asyncHandler(async (req: Request, res: Response) => {
     }
     await Like.create({
         video: videoId,
-        owner: req.user?._id
+        likedBy: req.user?._id
     });
     return res
         .status(201)
@@ -130,6 +130,9 @@ const getLikedVideos = asyncHandler(async (req: Request, res: Response) => {
             }
         }
     ]);
+    return res
+        .status(200)
+        .json(new ApiResponse(200, likedVideosAggregate, "Liked videos"));
 });
 
 export { toggleVideoLike, toggleCommentLike, toggleTweetLike, getLikedVideos };
