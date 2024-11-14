@@ -11,9 +11,9 @@ const addComment = asyncHandler(async (req: Request, res: Response) => {
     if (!isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid VideoId");
     }
-    
+
     const { content } = req.body;
-    
+
     const video = await Video.findById(videoId);
     if (!video) {
         throw new ApiError(404, "video not found");
@@ -35,17 +35,6 @@ const deleteComment = asyncHandler(async (req: Request, res: Response) => {
     const { commentId } = req.params;
     if (!isValidObjectId(commentId)) {
         throw new ApiError(400, "Invalid commentId");
-    }
-    const body = commentSchema.safeParse(req.body);
-    if (!body.success) {
-        const error = body.error.errors
-            .map((err) => `${err.path[0]} ${err.message}`)
-            .join(", ");
-        throw new ApiError(400, error);
-    }
-    const { content } = body.data;
-    if (!content) {
-        throw new ApiError(400, "Content is required");
     }
 
     const comment = await Comment.findById(commentId);
@@ -87,7 +76,12 @@ const updateComment = asyncHandler(async (req: Request, res: Response) => {
     if (!comment) {
         throw new ApiError(404, "Comment not found");
     }
-    if (comment.owner.toString() == req.user?._id.toString()) {
+    console.log(
+        "Comment owner:" + comment.owner.toString(),
+        "User id:" + req.user?._id.toString()
+    );
+
+    if (comment.owner.toString() !== req.user?._id.toString()) {
         throw new ApiError(403, "Only comment owner can edit their comment");
     }
     const updatedComment = await Comment.findByIdAndUpdate(
@@ -173,9 +167,9 @@ const getVideoComments = asyncHandler(async (req: Request, res: Response) => {
             }
         },
         {
-            $skip: skip,
-            $limit: parseInt(limit as string, 10)
-        }
+            $skip: skip
+        },
+        { $limit: parseInt(limit as string, 10) }
     ]);
     return res
         .status(200)

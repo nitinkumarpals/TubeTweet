@@ -8,7 +8,7 @@ import { Request, Response } from "express";
 const getChannelStats = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const totalSubscribers = await Subscription.aggregate([
-        { $match: new mongoose.Types.ObjectId(userId) },
+        { $match: { subscriber: new mongoose.Types.ObjectId(userId) } },
         {
             $group: {
                 _id: null,
@@ -19,7 +19,7 @@ const getChannelStats = asyncHandler(async (req: Request, res: Response) => {
         }
     ]);
     const video = await Subscription.aggregate([
-        { $match: new mongoose.Types.ObjectId(userId) },
+        { $match: { channel: new mongoose.Types.ObjectId(userId) } },
         {
             $lookup: {
                 from: "likes",
