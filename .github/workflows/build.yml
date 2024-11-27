@@ -8,6 +8,8 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
+        env:
+          MONGO_URI: ${{ secrets.MONGODB_URI }}
         steps:
             - uses: actions/checkout@v4
 
