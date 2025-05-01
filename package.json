@@ -13,7 +13,8 @@
   ],
   "scripts": {
     "dev": "bun --watch ./src/index.ts",
-    "build": " bun build ./src/index.ts --outdir ./build"
+    "build": "bun build ./src/index.ts --outdir ./build --target=node",
+    "start": "node ./build/index.js"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
